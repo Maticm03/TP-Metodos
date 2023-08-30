@@ -1,3 +1,4 @@
+#%% Lineal
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,6 +30,56 @@ plt.plot(x1_med, x2_med, label='Trayectoria Interpolada', color='blue', marker='
 plt.plot(x1_gt, x2_gt, label='Ground Truth', color='green', marker='x', linestyle='-', linewidth=2)
 plt.axvline(x=10, color='red', linestyle='--', label='Límite Vertical')
 plt.plot(x1_med, x2_limite_recta, label='Límite Recta', linestyle='--', color='purple')
+plt.xlabel('x1')
+plt.ylabel('x2')
+plt.title('Trayectoria del Tractor y Límites del Campo')
+plt.legend()
+plt.grid()
+plt.xlim([min(min(x1_med), min(x1_gt))-1, max(max(x1_med), max(x1_gt))+1])
+plt.ylim([min(min(x2_med), min(x2_gt))-1, max(max(x2_med), max(x2_gt))+1])
+plt.show()
+
+#%% Splines
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
+
+# Cargar los datos de mediciones y ground truth desde los archivos CSV
+mediciones_data = pd.read_csv('mediciones.csv', header=None, delimiter=' ')
+groundtruth_data = pd.read_csv('groundtruth.csv', header=None, delimiter=' ')
+
+# Extracción de columnas de coordenadas
+x1_med = mediciones_data[0].values
+x2_med = mediciones_data[1].values
+x1_gt = groundtruth_data[0].values
+x2_gt = groundtruth_data[1].values
+
+# Definir los límites de las zonas
+def limite_vertical(x1):
+    return [3.6] * len(x1)
+
+def limite_recta(x1):
+    return 3.6 - 0.35 * x1
+
+# Interpolación con splines cúbicos de la trayectoria del tractor
+spline_interpol = interp1d(x1_med, x2_med, kind='cubic')
+
+# Generar puntos para la interpolación
+x1_interpol = np.linspace(min(x1_med), max(x1_med), num=1000)
+x2_interpol = spline_interpol(x1_interpol)
+
+# Encontrar las intersecciones con los límites
+x2_limite_vertical = limite_vertical(x1_interpol)
+x2_limite_recta = limite_recta(x1_interpol)
+
+# Gráfico de la trayectoria y los límites
+plt.figure(figsize=(10, 6))
+plt.plot(x1_med, x2_med, label='Trayectoria Interpolada', color='blue', marker='o', linestyle='-', linewidth=2)
+plt.plot(x1_gt, x2_gt, label='Ground Truth', color='green', marker='x', linestyle='-', linewidth=2)
+plt.plot(x1_interpol, x2_interpol, label='Interpolación Spline', color='blue', linestyle='--', linewidth=2)
+plt.axvline(x=10, color='red', linestyle='--', label='Límite Vertical')
+plt.plot(x1_interpol, x2_limite_recta, label='Límite Recta', linestyle='--', color='purple')
 plt.xlabel('x1')
 plt.ylabel('x2')
 plt.title('Trayectoria del Tractor y Límites del Campo')
